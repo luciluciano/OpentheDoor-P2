@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpentheDoor:P2— The Complete Metasploit Field Manual</title>
+<meta name="description" content="An interactive field manual for the Metasploit Framework — installation, msfconsole anatomy, module types, payloads and encoders, Meterpreter, AV-evasion concepts, and a practical cheat sheet.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#08070d;
+    --bg-grad: radial-gradient(circle at 18% 0%, #2a0f14 0%, #08070d 45%), radial-gradient(circle at 90% 15%, #0c1a22 0%, transparent 50%);
+    --surface:#110e1c;
+    --surface-2:#171327;
+    --surface-3:#1d1830;
+    --border:#2a2342;
+    --border-soft:#1c1730;
+    --text:#ece9f7;
+    --text-muted:#9d93b8;
+    --text-faint:#6c6489;
+    --violet:#b34bff;
+    --violet-soft:#7c3aed;
+    --cyan:#00d9ff;
+    --magenta:#ff2e9a;
+    --green:#00e676;
+    --critical:#ff2e63;
+    --high:#ff9f1c;
+    --medium:#ffd60a;
+    --low:#00e5a0;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-grad), var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    min-height:100vh;
+  }
+  ::selection{background:var(--critical); color:#1a0209;}
+
+  a{color:var(--cyan); text-decoration:none;}
+
+  ::-webkit-scrollbar{width:10px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--surface-3); border-radius:8px; border:2px solid var(--bg);}
+  ::-webkit-scrollbar-thumb:hover{background:var(--violet-soft);}
+
+  .noise{
+    position:fixed; inset:0; pointer-events:none; z-index:1; opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .shell{display:grid; grid-template-columns:280px 1fr; min-height:100vh;}
+
+  .sidebar{
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+    background:linear-gradient(180deg, #160a12 0%, #0a0813 100%);
+    border-right:1px solid var(--border-soft);
+    padding:28px 22px 40px;
+    z-index:5;
+  }
+  .brand-eyebrow{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.18em; color:var(--critical);
+    font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  }
+  .brand-eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--critical); box-shadow:0 0 8px var(--critical); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.35;}}
+  .brand-title{font-family:var(--font-display); font-size:24px; font-weight:700; line-height:1.15; margin-bottom:6px;}
+  .brand-title span{color:var(--cyan);}
+  .brand-sub{font-size:12.5px; color:var(--text-muted); margin-bottom:26px;}
+
+  .part-pill{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:10.5px;
+    color:var(--high); border:1px solid rgba(255,159,28,.35); background:rgba(255,159,28,.06);
+    padding:5px 10px; border-radius:20px; margin-bottom:18px;
+  }
+
+  .progress-wrap{margin-bottom:8px;}
+  .progress-label{font-family:var(--font-mono); font-size:10.5px; letter-spacing:.14em; color:var(--text-faint); margin-bottom:8px;}
+  .progress-track{height:3px; background:var(--surface-2); border-radius:3px; overflow:hidden; margin-bottom:6px;}
+  .progress-fill{height:100%; width:8%; background:linear-gradient(90deg, var(--critical), var(--cyan)); border-radius:3px; transition:width .4s ease;}
+  .progress-pct{font-family:var(--font-mono); font-size:12px; color:var(--cyan); font-weight:600;}
+
+  .navlist{list-style:none; margin-top:26px; display:flex; flex-direction:column; gap:2px;}
+  .navlist li a{
+    display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:8px;
+    color:var(--text-muted); font-size:13.5px; font-weight:500; border-left:2px solid transparent;
+    transition:.18s ease;
+  }
+  .navlist li a .idx{font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); width:18px;}
+  .navlist li a:hover{color:var(--text); background:var(--surface-2);}
+  .navlist li a.active{color:var(--cyan); background:var(--surface-2); border-left-color:var(--cyan);}
+  .navlist li a.active .idx{color:var(--cyan);}
+
+  .sidebar-foot{margin-top:30px; padding-top:18px; border-top:1px solid var(--border-soft); font-size:11.5px; color:var(--text-faint); font-family:var(--font-mono);}
+
+  main{position:relative; z-index:2;}
+
+  .hero{
+    padding:80px 64px 56px; border-bottom:1px solid var(--border-soft);
+    position:relative; overflow:hidden;
+  }
+  .hero::before{
+    content:""; position:absolute; top:-120px; right:-120px; width:480px; height:480px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,46,99,.16), transparent 70%); filter:blur(10px); pointer-events:none;
+  }
+  .hero::after{
+    content:""; position:absolute; bottom:-160px; left:30%; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(0,217,255,.10), transparent 70%); filter:blur(10px); pointer-events:none;
+  }
+  .badge{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11.5px; letter-spacing:.1em;
+    color:var(--cyan); border:1px solid rgba(0,217,255,.35); background:rgba(0,217,255,.06);
+    padding:7px 14px; border-radius:30px; margin-bottom:26px;
+  }
+  .badge .dot{width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 8px var(--cyan);}
+
+  .hero h1{
+    font-family:var(--font-display); font-weight:700; font-size:clamp(36px, 5vw, 64px); line-height:1.04; letter-spacing:-.01em;
+    max-width:880px; margin-bottom:22px;
+  }
+  .hero h1 .grad{
+    background:linear-gradient(95deg, var(--critical) 10%, var(--high) 55%, var(--violet) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p.lead{font-size:17px; color:var(--text-muted); max-width:640px; margin-bottom:34px;}
+
+  .stat-row{display:flex; flex-wrap:wrap; gap:14px; margin-bottom:8px;}
+  .stat-card{
+    display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border);
+    padding:14px 18px; border-radius:12px; min-width:180px;
+  }
+  .stat-card .ic{
+    width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    background:var(--surface-2); font-size:16px;
+  }
+  .stat-card .num{font-family:var(--font-display); font-weight:700; font-size:18px; line-height:1.1;}
+  .stat-card .lbl{font-size:11.5px; color:var(--text-faint);}
+
+  section{padding:64px; border-bottom:1px solid var(--border-soft); scroll-margin-top:20px;}
+  section:last-of-type{border-bottom:none;}
+
+  .sec-eyebrow{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.18em; color:var(--magenta);
+    display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  }
+  .sec-eyebrow::before{content:""; width:22px; height:1px; background:var(--magenta);}
+  .sec-title{font-family:var(--font-display); font-size:clamp(26px,3vw,38px); font-weight:700; margin-bottom:14px;}
+  .sec-desc{color:var(--text-muted); max-width:680px; margin-bottom:42px; font-size:15.5px;}
+
+  .proto-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px;}
+  .proto-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; transition:border-color .2s ease;}
+  .proto-card:hover{border-color:var(--violet-soft);}
+  .proto-card .top{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .proto-card h3{font-family:var(--font-display); font-size:16px;}
+  .proto-card .portno{font-family:var(--font-mono); font-size:12px; color:var(--text-faint); white-space:nowrap;}
+  .proto-card p{font-size:13.5px; color:var(--text-muted); margin-bottom:12px;}
+  .proto-card .warn{display:flex; gap:8px; font-size:12px; color:var(--text-faint); align-items:flex-start;}
+
+  .ip-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin-bottom:34px;}
+  .ip-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px;}
+  .ip-card h3{font-family:var(--font-display); font-size:15px; margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+  .ip-card table{width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:12.5px;}
+  .ip-card td{padding:6px 0; border-bottom:1px dashed var(--border-soft); color:var(--text-muted);}
+  .ip-card td:last-child{text-align:right; color:var(--text); font-weight:600;}
+  .codeline{
+    font-family:var(--font-mono); background:var(--surface-2); border:1px solid var(--border-soft); padding:9px 12px;
+    border-radius:7px; font-size:12.5px; color:var(--low); margin-top:10px; overflow-x:auto; white-space:nowrap;
+  }
+  .ip-card .note{font-size:12px; color:var(--text-faint); margin-top:10px;}
+
+  .callout{
+    border:1px solid rgba(255,46,99,.3); background:rgba(255,46,99,.06); border-radius:12px; padding:18px 20px;
+    display:flex; gap:14px; max-width:760px;
+  }
+  .callout .ic{font-size:18px;}
+  .callout b{color:var(--critical);}
+  .callout p{font-size:13.5px; color:var(--text-muted);}
+
+  .callout.green{border-color:rgba(0,230,118,.3); background:rgba(0,230,118,.06);}
+  .callout.green b{color:var(--green);}
+
+  .console{
+    background:#0c0a17; border:1px solid var(--border); border-radius:16px; overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(255,46,99,.2);
+  }
+  .console-bar{display:flex; align-items:center; gap:8px; padding:13px 18px; background:var(--surface-2); border-bottom:1px solid var(--border);}
+  .console-bar .dotbtn{width:11px; height:11px; border-radius:50%;}
+  .console-bar .dotbtn:nth-child(1){background:#ff5f57;}
+  .console-bar .dotbtn:nth-child(2){background:#febc2e;}
+  .console-bar .dotbtn:nth-child(3){background:#28c840;}
+  .console-bar .title{margin-left:10px; font-family:var(--font-mono); font-size:12px; color:var(--text-faint);}
+  .console-inner{padding:22px;}
+  .console-prompt{font-family:var(--font-mono); font-size:13px; color:var(--low); margin-bottom:14px; display:flex; align-items:center; gap:8px;}
+  .console-prompt .blink{width:8px; height:14px; background:var(--low); display:inline-block; animation:blink 1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  .port-controls{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:18px;}
+  #portSearch{
+    flex:1; min-width:220px; background:var(--bg); border:1px solid var(--border); color:var(--text);
+    font-family:var(--font-mono); font-size:13.5px; padding:11px 14px; border-radius:9px; outline:none;
+  }
+  #portSearch:focus{border-color:var(--cyan);}
+  .filter-btn{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.04em; padding:9px 14px; border-radius:9px;
+    border:1px solid var(--border); background:var(--bg); color:var(--text-muted); cursor:pointer; transition:.15s;
+  }
+  .filter-btn:hover{color:var(--text);}
+  .filter-btn.active{border-color:var(--violet); color:var(--violet); background:rgba(179,75,255,.08);}
+
+  .port-table-wrap{max-height:560px; overflow-y:auto; border-radius:10px; border:1px solid var(--border-soft);}
+  table.port-table{width:100%; border-collapse:collapse; font-size:13px;}
+  table.port-table thead th{
+    position:sticky; top:0; background:#100d1c; text-align:left; font-family:var(--font-mono); font-size:10.5px;
+    letter-spacing:.08em; color:var(--text-faint); padding:11px 14px; border-bottom:1px solid var(--border); z-index:1;
+  }
+  table.port-table tbody td{padding:11px 14px; border-bottom:1px solid var(--border-soft); vertical-align:top; color:var(--text-muted);}
+  table.port-table tbody tr:hover{background:rgba(255,46,99,.04);}
+  .port-num{font-family:var(--font-mono); font-weight:700; color:var(--text); font-size:13.5px; white-space:nowrap;}
+  .proto-pill{font-family:var(--font-mono); font-size:10.5px; padding:2px 7px; border-radius:5px; border:1px solid var(--border); display:inline-block;}
+  .proto-tcp{color:var(--cyan); border-color:rgba(0,217,255,.35);}
+  .proto-udp{color:var(--magenta); border-color:rgba(255,46,154,.35);}
+  .proto-both{color:var(--violet); border-color:rgba(179,75,255,.35);}
+  .proto-evade{color:var(--high); border-color:rgba(255,159,28,.35);}
+  .proto-out{color:var(--green); border-color:rgba(0,230,118,.35);}
+  .svc-name{color:var(--text); font-weight:600;}
+  .risk-pill{font-family:var(--font-mono); font-size:10.5px; padding:3px 9px; border-radius:20px; font-weight:600; display:inline-flex; align-items:center; gap:5px; white-space:nowrap;}
+  .risk-pill::before{content:""; width:6px; height:6px; border-radius:50%;}
+  .risk-critical{color:var(--critical); background:rgba(255,46,99,.1);}
+  .risk-critical::before{background:var(--critical);}
+  .risk-high{color:var(--high); background:rgba(255,159,28,.1);}
+  .risk-high::before{background:var(--high);}
+  .risk-medium{color:var(--medium); background:rgba(255,214,10,.1);}
+  .risk-medium::before{background:var(--medium);}
+  .risk-low{color:var(--low); background:rgba(0,229,160,.1);}
+  .risk-low::before{background:var(--low);}
+  .no-results{padding:30px; text-align:center; color:var(--text-faint); font-family:var(--font-mono); font-size:13px;}
+  .result-count{font-family:var(--font-mono); font-size:11.5px; color:var(--text-faint); margin-top:12px;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:18px; margin-top:18px;}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); font-family:var(--font-mono);}
+  .legend-dot{width:8px; height:8px; border-radius:50%; display:inline-block;}
+
+  .osi-list{display:flex; flex-direction:column; gap:10px;}
+  .osi-layer{background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden; border-left:3px solid var(--layer-color, var(--violet));}
+  .osi-head{display:flex; align-items:center; gap:16px; padding:16px 20px; cursor:pointer;}
+  .osi-num{font-family:var(--font-mono); font-size:12px; color:var(--text-faint); width:30px;}
+  .osi-name{font-family:var(--font-display); font-weight:600; font-size:15px; width:170px;}
+  .osi-mnemonic{font-size:12.5px; color:var(--text-muted); flex:1;}
+  .osi-chevron{color:var(--text-faint); transition:.2s ease;}
+  .osi-layer.open .osi-chevron{transform:rotate(180deg);}
+  .osi-body{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+  .osi-layer.open .osi-body{max-height:400px;}
+  .osi-body-inner{padding:0 20px 20px; display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  .osi-body-inner .blk h4{font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); margin-bottom:6px; font-family:var(--font-mono);}
+  .osi-body-inner .blk p, .osi-body-inner .blk span{font-size:13.5px; color:var(--text-muted);}
+  .chip-row{display:flex; flex-wrap:wrap; gap:6px;}
+  .chip{font-family:var(--font-mono); font-size:11px; background:var(--surface-2); border:1px solid var(--border); padding:3px 9px; border-radius:6px; color:var(--text);}
+
+  .attack-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px;}
+  .attack-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;}
+  .attack-card .tag{font-family:var(--font-mono); font-size:10.5px; color:var(--high); letter-spacing:.08em; margin-bottom:10px; display:block;}
+  .attack-card h4{font-family:var(--font-display); font-size:15.5px; margin-bottom:8px;}
+  .attack-card p{font-size:13px; color:var(--text-muted); margin-bottom:10px;}
+  .attack-card .target{font-family:var(--font-mono); font-size:11px; color:var(--text-faint);}
+
+  .checklist{display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:14px;}
+  .check-item{
+    display:flex; gap:14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    align-items:flex-start;
+  }
+  .check-item .box{
+    width:22px; height:22px; border-radius:6px; border:1.5px solid var(--low); flex-shrink:0; margin-top:1px;
+    display:flex; align-items:center; justify-content:center; color:var(--low); font-size:13px; cursor:pointer;
+  }
+  .check-item span{font-size:13.5px; color:var(--text-muted);}
+  .check-item.done span{color:var(--text-faint); text-decoration:line-through;}
+  .check-item.done .box{background:var(--low); color:var(--bg);}
+
+  .cheat-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:10px;}
+  .cheat-tile{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; text-align:left;
+  }
+  .cheat-tile .p{font-family:var(--font-mono); font-weight:700; font-size:12.5px; color:var(--cyan); word-break:break-word;}
+  .cheat-tile .s{font-size:11.5px; color:var(--text-muted); margin-top:6px;}
+
+  footer{padding:48px 64px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:24px; align-items:center;}
+  footer .left{font-family:var(--font-mono); font-size:12px; color:var(--text-faint);}
+  footer .links{display:flex; gap:22px; font-family:var(--font-mono); font-size:12px;}
+
+  @media (max-width: 980px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:relative; height:auto;}
+    .hero, section{padding:40px 24px;}
+    footer{padding:32px 24px;}
+    .osi-name{width:140px;}
+    .osi-body-inner{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<div class="shell">
+
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar">
+    <div class="brand-eyebrow"><span class="dot"></span>OpentheDoor:P2</div>
+    <div class="brand-title">Metasploit <span>Field Manual</span></div>
+    <div class="brand-sub"> — the workflow that follows Nmap</div>
+    <div class="part-pill">PART 02 — CONTINUES THE NMAP MANUAL</div>
+
+    <div class="progress-wrap">
+      <div class="progress-label">SCROLL PROGRESS</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-pct" id="progressPct">0%</div>
+    </div>
+
+    <ul class="navlist" id="navlist">
+      <li><a href="#overview" class="idxlink"><span class="idx">01</span>What Is Metasploit?</a></li>
+      <li><a href="#install" class="idxlink"><span class="idx">02</span>Installation</a></li>
+      <li><a href="#anatomy" class="idxlink"><span class="idx">03</span>msfconsole Anatomy</a></li>
+      <li><a href="#modules" class="idxlink"><span class="idx">04</span>Module Console</a></li>
+      <li><a href="#payloads" class="idxlink"><span class="idx">05</span>Payloads &amp; Encoders</a></li>
+      <li><a href="#meterpreter" class="idxlink"><span class="idx">06</span>Meterpreter Sessions</a></li>
+      <li><a href="#evasion" class="idxlink"><span class="idx">07</span>AV/IDS Evasion Concepts</a></li>
+      <li><a href="#ethics" class="idxlink"><span class="idx">08</span>Legal &amp; Ethics</a></li>
+      <li><a href="#cheatsheet" class="idxlink"><span class="idx">09</span>Cheat Grid</a></li>
+    </ul>
+
+    <div class="sidebar-foot">
+      Built for students &amp; pentesters<br>Practice only in labs you own or are explicitly authorized to test — e.g. Metasploitable2, HTB, TryHackMe.
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="badge"><span class="dot"></span>OPEN-SOURCE REFERENCE · EXPLOITATION FRAMEWORK</div>
+      <h1>The Complete<br><span class="grad">Metasploit</span> Field Manual</h1>
+      <p class="lead">Once Nmap tells you what's out there, Metasploit is the framework most pentesters reach for next: a structured library of modules, payloads, and a shared console for running them against systems you're authorized to test. This guide covers the architecture, the workflow, and the vocabulary — not weaponized exploit code.</p>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="ic">🧩</div><div><div class="num">6</div><div class="lbl">Core module types</div></div></div>
+        <div class="stat-card"><div class="ic">📦</div><div><div class="num">2</div><div class="lbl">Payload staging models</div></div></div>
+        <div class="stat-card"><div class="ic">💻</div><div><div class="num">20+</div><div class="lbl">msfconsole commands indexed</div></div></div>
+        <div class="stat-card"><div class="ic">🛡️</div><div><div class="num">7</div><div class="lbl">Evasion concepts covered</div></div></div>
+      </div>
+    </div>
+
+    <!-- ============ 01 OVERVIEW ============ -->
+    <section id="overview">
+      <div class="sec-eyebrow">01 · FOUNDATIONS</div>
+      <h2 class="sec-title">What is Metasploit, really?</h2>
+      <p class="sec-desc">The Metasploit Framework (MSF) is an open-source platform, maintained by Rapid7, for developing, testing, and running security-assessment modules against target systems in an authorized engagement. It doesn't replace Nmap — it consumes what Nmap finds. Recon tells you a host is running a specific service and version; Metasploit gives you a searchable, standardized library of modules built to test whether that service is actually vulnerable, plus the plumbing (sessions, payload handlers, a shared datastore) to run those tests consistently. Every engagement generally moves through the four stages below.</p>
+
+      <div class="proto-grid" id="phaseGrid"></div>
+    </section>
+
+    <!-- ============ 02 INSTALL ============ -->
+    <section id="install">
+      <div class="sec-eyebrow">02 · GETTING STARTED</div>
+      <h2 class="sec-title">Installing the framework</h2>
+      <p class="sec-desc">Metasploit ships preinstalled on most pentest-focused Linux distributions. Elsewhere, Rapid7 maintains an official installer and a Homebrew formula.</p>
+
+      <div class="ip-grid" id="installGrid"></div>
+
+      <div class="callout green">
+        <div class="ic">✅</div>
+        <p><b>Verify it worked:</b> run <code style="font-family:var(--font-mono); color:var(--text);">msfconsole -v</code> in your terminal — it should print the installed framework version, then drop you at the <code style="font-family:var(--font-mono); color:var(--text);">msf6 &gt;</code> prompt.</p>
+      </div>
+    </section>
+
+    <!-- ============ 03 COMMAND ANATOMY ============ -->
+    <section id="anatomy">
+      <div class="sec-eyebrow">03 · FOUNDATIONS</div>
+      <h2 class="sec-title">Anatomy of an msfconsole session</h2>
+      <p class="sec-desc">Almost every module you run follows the same shape: <code style="font-family:var(--font-mono); color:var(--cyan);">search → use → show options → set → run/exploit</code>. Mix and match the building blocks below to navigate the console like a pentester rather than clicking around blind.</p>
+
+      <div class="ip-grid" id="anatomyGrid"></div>
+    </section>
+
+    <!-- ============ 04 MODULE CONSOLE ============ -->
+    <section id="modules">
+      <div class="sec-eyebrow">04 · THE CORE REFERENCE</div>
+      <h2 class="sec-title">Module &amp; Command Console</h2>
+      <p class="sec-desc">Search by command, module type, or keyword. Every entry explains what it does, which module context it belongs to, and how "loud" or session-altering it is — the same trade-offs you weigh before running anything against a real target.</p>
+
+      <div class="console">
+        <div class="console-bar">
+          <span class="dotbtn"></span><span class="dotbtn"></span><span class="dotbtn"></span>
+          <span class="title">msf6 @ openthedoor-lab: ~/metasploit-reference</span>
+        </div>
+        <div class="console-inner">
+          <div class="console-prompt">msf6 &gt; help --database <span class="blink"></span></div>
+
+          <div class="port-controls">
+            <input type="text" id="portSearch" placeholder="Search a command, module type, or keyword (e.g. search, RHOSTS, session, workspace)...">
+            <button class="filter-btn active" data-risk="all">ALL</button>
+            <button class="filter-btn" data-risk="critical">SESSION-CHANGING</button>
+            <button class="filter-btn" data-risk="high">NOISY</button>
+            <button class="filter-btn" data-risk="medium">MODERATE</button>
+            <button class="filter-btn" data-risk="low">READ-ONLY</button>
+          </div>
+
+          <div class="port-table-wrap">
+            <table class="port-table">
+              <thead>
+                <tr><th>Command</th><th>Context</th><th>Changes state?</th><th>What it does</th><th>Footprint</th></tr>
+              </thead>
+              <tbody id="portTableBody"></tbody>
+            </table>
+          </div>
+          <div class="result-count" id="resultCount"></div>
+
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--critical)"></span>Session-changing — opens, kills, or migrates an active session</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--high)"></span>Noisy — generates real traffic or logs on the target</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--medium)"></span>Moderate — touches the local datastore or DB only</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--low)"></span>Read-only — informational, no state changed</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 05 PAYLOADS & ENCODERS ============ -->
+    <section id="payloads">
+      <div class="sec-eyebrow">05 · DEEP DIVE</div>
+      <h2 class="sec-title">Module types, payloads &amp; encoders</h2>
+      <p class="sec-desc">Metasploit organizes everything into module types so the console knows how a piece fits together — an exploit needs a payload, a payload might need an encoder, and post modules need an existing session. Understanding this taxonomy matters more than memorizing any single module.</p>
+
+      <div class="proto-grid" id="nseGrid"></div>
+    </section>
+
+    <!-- ============ 06 METERPRETER ============ -->
+    <section id="meterpreter">
+      <div class="sec-eyebrow">06 · POST-EXPLOITATION</div>
+      <h2 class="sec-title">Meterpreter session commands</h2>
+      <p class="sec-desc">Meterpreter is Metasploit's in-memory post-exploitation agent — it never touches disk on the target and gives you a consistent command set regardless of the underlying OS. These are the commands you reach for once a session opens, grouped by what stage of the assessment they support. Click a group to expand it.</p>
+
+      <div class="osi-list" id="timingList"></div>
+    </section>
+
+    <!-- ============ 07 EVASION ============ -->
+    <section id="evasion">
+      <div class="sec-eyebrow">07 · ADVANCED CONCEPTS</div>
+      <h2 class="sec-title">AV &amp; IDS evasion — the concepts, not the code</h2>
+      <p class="sec-desc">Endpoint protection actively fingerprints Metasploit's default payload templates. This section explains <em>why</em> evasion techniques exist and what problem each one solves at a conceptual level — it deliberately stops short of ready-to-run bypass code, which ages fast and is easy to misuse outside a lab.</p>
+
+      <div class="attack-grid" id="evasionGrid"></div>
+    </section>
+
+    <!-- ============ 08 ETHICS ============ -->
+    <section id="ethics">
+      <div class="sec-eyebrow">08 · RULES OF ENGAGEMENT</div>
+      <h2 class="sec-title">Legal &amp; ethical ground rules</h2>
+      <p class="sec-desc">Running exploit modules against a system you don't own or lack explicit written permission to test is illegal in most jurisdictions — this is true even in a Metasploit lab you spun up yourself if it's reachable from outside your isolated network. Run through this list before every session. Click an item to check it off.</p>
+
+      <div class="checklist" id="checklist"></div>
+    </section>
+
+    <!-- ============ 09 CHEAT GRID ============ -->
+    <section id="cheatsheet">
+      <div class="sec-eyebrow">09 · PRINT &amp; PIN</div>
+      <h2 class="sec-title">The one-liners you'll use constantly</h2>
+      <p class="sec-desc">If you remember nothing else from this page, remember this grid. It covers the msfconsole commands that show up in labs, CTFs, and OSCP-style exercises more than any other.</p>
+
+      <div class="cheat-grid" id="cheatGrid"></div>
+    </section>
+
+    <footer>
+      <div class="left">© <span id="year"></span> <OpentheDoor:P2></OpentheDoor:P2> — built by Devadath C. · Part 02 of the Nmap series</div>
+      <div class="links">
+        <a href="#overview">Back to top ↑</a>
+        <a href="https://docs.metasploit.com/" target="_blank" rel="noopener">Official Metasploit docs ↗</a>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+/* ============ SCROLL PROGRESS + ACTIVE NAV ============ */
+const progressFill = document.getElementById('progressFill');
+const progressPct = document.getElementById('progressPct');
+const navLinks = document.querySelectorAll('.idxlink');
+const sectionEls = [...navLinks].map(l => document.querySelector(l.getAttribute('href')));
+
+function onScroll(){
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = docHeight > 0 ? Math.min(100, Math.round((scrollTop/docHeight)*100)) : 0;
+  progressFill.style.width = pct + '%';
+  progressPct.textContent = pct + '%';
+
+  let activeIdx = 0;
+  sectionEls.forEach((el,i) => {
+    if(el && el.getBoundingClientRect().top <= 140) activeIdx = i;
+  });
+  navLinks.forEach((l,i)=> l.classList.toggle('active', i===activeIdx));
+}
+window.addEventListener('scroll', onScroll);
+onScroll();
+
+/* ============ 01 ENGAGEMENT PHASES ============ */
+const phaseData = [
+  {name:"Recon Import", num:"PHASE 01", desc:"Nmap/vuln-scan results (or live scans run from inside msfconsole via db_nmap) get parsed into the project database as hosts and services.", warn:"📥 db_import pulls in existing .xml scan output."},
+  {name:"Module Selection", num:"PHASE 02", desc:"search narrows thousands of modules down to the ones that match a discovered service, version, or CVE reference.", warn:"🔎 A precise search query saves more time than anything else."},
+  {name:"Exploitation", num:"PHASE 03", desc:"An exploit module is configured with a target and a payload, then run — success opens a session (shell or Meterpreter) back to the attacker.", warn:"🎯 Only ever against explicitly authorized targets."},
+  {name:"Post-Exploitation", num:"PHASE 04", desc:"Once a session exists, post modules and Meterpreter commands gather evidence, pivot, or demonstrate impact for the report.", warn:"📝 Everything here should map to a line in your findings."},
+];
+document.getElementById('phaseGrid').innerHTML = phaseData.map(p => `
+  <div class="proto-card">
+    <div class="top"><h3>${p.name}</h3><span class="portno">${p.num}</span></div>
+    <p>${p.desc}</p>
+    <div class="warn"><span>${p.warn}</span></div>
+  </div>
+`).join('');
+
+/* ============ 02 INSTALL ============ */
+const installData = [
+  {os:"🐧 Debian / Ubuntu", cmd:"curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb > msfinstall && chmod +x msfinstall && ./msfinstall", note:"Rapid7's official installer script; sets up the framework plus its bundled PostgreSQL database."},
+  {os:"🎩 Fedora / RHEL / CentOS", cmd:"# same installer script as Debian/Ubuntu", note:"The omnibus installer is distro-agnostic for most modern Linux."},
+  {os:"🍎 macOS", cmd:"brew install metasploit", note:"Requires Homebrew. Some post-modules with OS-specific dependencies behave differently outside Linux."},
+  {os:"🪟 Windows", cmd:"# download the official Windows installer", note:"Grab it from Rapid7's GitHub releases — WSL2 with a Linux install is the smoother path for most workflows."},
+  {os:"🦂 Kali / Parrot OS", cmd:"msfconsole -v   # already installed", note:"Ships preinstalled with the database already linked."},
+  {os:"🐳 Docker", cmd:"docker run --rm -it metasploitframework/metasploit-framework", note:"Good for a disposable, isolated lab instance you can nuke after every session."},
+];
+document.getElementById('installGrid').innerHTML = installData.map(i => `
+  <div class="ip-card">
+    <h3>${i.os}</h3>
+    <div class="codeline">${i.cmd}</div>
+    <div class="note">${i.note}</div>
+  </div>
+`).join('');
+
+/* ============ 03 ANATOMY ============ */
+const anatomyData = [
+  {title:"🗂️ Workspace &amp; Database", rows:[["List workspaces","workspace -l"],["New workspace","workspace -a lab1"],["Switch workspace","workspace lab1"],["Import scan","db_import scan.xml"],["List hosts","hosts"],["List services","services"]]},
+  {title:"🔎 Finding Modules", rows:[["Keyword search","search type:exploit apache"],["By CVE","search cve:2021"],["By platform","search platform:windows"],["Module info","info"],["Select module","use 0"]]},
+  {title:"⚙️ Configuring a Module", rows:[["Show all options","show options"],["Set a value","set RHOSTS 10.0.0.5"],["Set for every module","setg LHOST 10.0.0.2"],["Show payload list","show payloads"],["Set payload","set payload &lt;name&gt;"]]},
+  {title:"🚀 Running &amp; Sessions", rows:[["Run exploit module","exploit / run"],["Background a session","background"],["List sessions","sessions -l"],["Interact with session","sessions -i 1"],["Kill a session","sessions -k 1"]]},
+];
+document.getElementById('anatomyGrid').innerHTML = anatomyData.map(a => `
+  <div class="ip-card">
+    <h3>${a.title}</h3>
+    <table>${a.rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+  </div>
+`).join('');
+
+/* ============ 04 MODULE/COMMAND DATABASE ============ */
+const portData = [
+  {port:"search &lt;term&gt;", proto:"CORE", svc:"Search the module tree", desc:"Filters the full module database by keyword, CVE, platform, type, or app name — the entry point to almost every session.", root:"No", risk:"low"},
+  {port:"use &lt;n|path&gt;", proto:"CORE", svc:"Load a module", desc:"Loads a module by search index or full path, switching the console prompt into that module's context.", root:"No", risk:"medium"},
+  {port:"back", proto:"CORE", svc:"Exit module context", desc:"Steps back out of the currently loaded module to the top-level msf6 prompt.", root:"No", risk:"low"},
+  {port:"show options", proto:"CORE", svc:"List datastore options", desc:"Displays every configurable option for the loaded module, flagging which are required and what's currently set.", root:"No", risk:"low"},
+  {port:"show payloads", proto:"CORE", svc:"List compatible payloads", desc:"Lists every payload compatible with the currently loaded exploit module.", root:"No", risk:"low"},
+  {port:"show targets", proto:"CORE", svc:"List exploit targets", desc:"Lists the specific OS/software build variants an exploit module has been written to support.", root:"No", risk:"low"},
+  {port:"info", proto:"CORE", svc:"Module details", desc:"Prints full documentation for a module: description, references, authors, and affected versions.", root:"No", risk:"low"},
+  {port:"set &lt;OPT&gt; &lt;val&gt;", proto:"CONFIG", svc:"Set an option", desc:"Assigns a value to a module option (e.g. RHOSTS, RPORT, LHOST) for the current module only.", root:"No", risk:"medium"},
+  {port:"setg &lt;OPT&gt; &lt;val&gt;", proto:"CONFIG", svc:"Set a global option", desc:"Assigns a value that persists across every module you load afterward — handy for LHOST in a long session.", root:"No", risk:"medium"},
+  {port:"unset / unsetg", proto:"CONFIG", svc:"Clear an option", desc:"Removes a previously set value, local or global, reverting that option to its default.", root:"No", risk:"low"},
+  {port:"set payload &lt;name&gt;", proto:"CONFIG", svc:"Attach a payload", desc:"Pairs the loaded exploit with a specific payload (e.g. a Meterpreter or plain shell variant) before running it.", root:"No", risk:"medium"},
+  {port:"check", proto:"CONFIG", svc:"Non-exploiting vuln check", desc:"For modules that support it, tests whether the target looks vulnerable without actually running the exploit.", root:"No", risk:"medium"},
+  {port:"exploit / run", proto:"RUN", svc:"Execute the module", desc:"Runs the configured module against the target — for exploits, a successful run opens a new session.", root:"No", risk:"high"},
+  {port:"exploit -j", proto:"RUN", svc:"Run as background job", desc:"Executes the module asynchronously so the console stays free while it runs, useful for slow or repeated attempts.", root:"No", risk:"high"},
+  {port:"sessions -l", proto:"SESSION", svc:"List active sessions", desc:"Shows every currently open session, its type (shell/Meterpreter), and the host it's connected to.", root:"No", risk:"low"},
+  {port:"sessions -i &lt;id&gt;", proto:"SESSION", svc:"Interact with a session", desc:"Moves the console into an active session, letting you type commands directly to the target.", root:"No", risk:"critical"},
+  {port:"sessions -k &lt;id&gt;", proto:"SESSION", svc:"Kill a session", desc:"Forcibly closes a session and removes it from the active list.", root:"No", risk:"critical"},
+  {port:"background / Ctrl+Z", proto:"SESSION", svc:"Detach from session", desc:"Returns to msfconsole without closing the session, so you can run other modules against it later.", root:"No", risk:"medium"},
+  {port:"db_nmap &lt;flags&gt;", proto:"DB", svc:"Scan into the database", desc:"Runs an Nmap scan from inside msfconsole and automatically stores the results as hosts/services.", root:"No", risk:"high"},
+  {port:"hosts / services", proto:"DB", svc:"Query the database", desc:"Lists everything the current workspace knows about discovered hosts and the services running on them.", root:"No", risk:"low"},
+  {port:"loot", proto:"DB", svc:"List collected evidence", desc:"Shows files and data (hashes, screenshots, configs) that post-exploitation modules have pulled from sessions.", root:"No", risk:"low"},
+  {port:"workspace -a &lt;name&gt;", proto:"DB", svc:"Create a workspace", desc:"Creates a fresh, isolated project so findings from one engagement never mix with another.", root:"No", risk:"medium"},
+];
+
+const portTableBody = document.getElementById('portTableBody');
+const portSearch = document.getElementById('portSearch');
+const filterBtns = document.querySelectorAll('.filter-btn');
+const resultCount = document.getElementById('resultCount');
+let activeRisk = 'all';
+
+function protoPillClass(proto){
+  if(proto === 'CORE') return 'proto-tcp';
+  if(proto === 'CONFIG') return 'proto-udp';
+  if(proto === 'RUN') return 'proto-both';
+  if(proto === 'SESSION') return 'proto-evade';
+  return 'proto-out';
+}
+
+function renderPorts(){
+  const q = portSearch.value.trim().toLowerCase();
+  const filtered = portData.filter(p => {
+    const matchesQuery = !q || String(p.port).toLowerCase().includes(q) || p.svc.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.proto.toLowerCase().includes(q);
+    const matchesRisk = activeRisk === 'all' || p.risk === activeRisk;
+    return matchesQuery && matchesRisk;
+  });
+
+  portTableBody.innerHTML = filtered.length ? filtered.map(p => `
+    <tr>
+      <td class="port-num">${p.port}</td>
+      <td><span class="proto-pill ${protoPillClass(p.proto)}">${p.proto}</span></td>
+      <td class="svc-name">${p.root}</td>
+      <td>${p.desc}</td>
+      <td><span class="risk-pill risk-${p.risk}">${p.risk}</span></td>
+    </tr>
+  `).join('') : `<tr><td colspan="5"><div class="no-results">$ no matches — try a different command, context, or keyword</div></td></tr>`;
+
+  resultCount.textContent = `${filtered.length} of ${portData.length} entries shown`;
+}
+
+portSearch.addEventListener('input', renderPorts);
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    activeRisk = btn.dataset.risk;
+    renderPorts();
+  });
+});
+renderPorts();
+
+/* ============ 05 MODULE TYPES / PAYLOADS / ENCODERS ============ */
+const nseData = [
+  {name:"exploit", port:"exploit/...", desc:"Modules that target a specific vulnerability in a specific piece of software to gain code execution or another foothold.", warn:"🎯 The module type most people mean by 'a Metasploit module'."},
+  {name:"auxiliary", port:"auxiliary/...", desc:"Everything that isn't exploitation: scanners, fuzzers, login brute-forcers, and protocol-specific enumeration tools.", warn:"🧰 Often the safest place to start against a new target."},
+  {name:"post", port:"post/...", desc:"Runs against an already-open session to gather system info, dump credentials, or move laterally — needs a session first.", warn:"📦 Requires SESSION set to an active session ID."},
+  {name:"payload", port:"payload/...", desc:"The code that actually runs once an exploit succeeds — a reverse shell, a Meterpreter agent, or a simple command executor.", warn:"📡 Staged vs. stageless changes how it's delivered, not what it does."},
+  {name:"encoder", port:"encoder/...", desc:"Transforms a payload's byte pattern to avoid a small set of 'bad characters' the target protocol can't handle reliably.", warn:"⚠️ Not a modern AV-bypass tool on its own — see the evasion section."},
+  {name:"nop", port:"nop/...", desc:"Generates architecture-specific 'no-operation' sled bytes, historically used to pad memory before shellcode in buffer-overflow exploits.", warn:"🧱 Rarely touched directly outside exploit-development work."},
+];
+document.getElementById('nseGrid').innerHTML = nseData.map(c => `
+  <div class="proto-card">
+    <div class="top"><h3>${c.name}</h3><span class="portno">${c.port}</span></div>
+    <p>${c.desc}</p>
+    <div class="warn"><span>${c.warn}</span></div>
+  </div>
+`).join('');
+
+/* ============ 06 METERPRETER COMMAND GROUPS ============ */
+const timingData = [
+  {n:"①", name:"Situational Awareness", color:"#00e5a0", mnemonic:"sysinfo, getuid, getpid", func:"The first commands to run in any new session — confirm what OS/architecture you're on, which user context you're running as, and the process you've landed in.", chips:["sysinfo","getuid","getpid","ps"], tradeoff:"Run these before anything else; they shape every decision that follows."},
+  {n:"②", name:"File System", color:"#00d9ff", mnemonic:"pwd, ls, download, upload", func:"Standard navigation and transfer commands that operate entirely in Meterpreter's own protocol, not the target's native shell.", chips:["pwd","ls","cd","download","upload"], tradeoff:"Useful for evidence collection during an authorized assessment — always respect scope."},
+  {n:"③", name:"Privilege &amp; Persistence Info", color:"#7c3aed", mnemonic:"getprivs, getsystem", func:"Checks what privileges the current session holds and, on supported Windows targets, attempts known local privilege-escalation techniques bundled with the framework.", chips:["getprivs","getsystem","use priv"], tradeoff:"High-impact commands — only ever inside an explicitly scoped, authorized engagement."},
+  {n:"④", name:"Network Pivoting", color:"#b34bff", mnemonic:"route, portfwd, autoroute", func:"Lets traffic from other Metasploit modules travel through an existing session, effectively using a compromised host as a jump box into an internal network segment.", chips:["run autoroute -s","portfwd add","route"], tradeoff:"Pivoting expands your blast radius — confirm it's in scope before adding a route."},
+  {n:"⑤", name:"Screen &amp; Camera", color:"#ff9f1c", mnemonic:"screenshot, webcam_list", func:"Captures visual evidence for a report — a screenshot of the desktop or a still frame from an available webcam, where supported.", chips:["screenshot","webcam_list","webcam_snap"], tradeoff:"Extremely sensitive from a privacy standpoint — confirm this is explicitly authorized before use."},
+  {n:"⑥", name:"Credential Access", color:"#ff2e63", mnemonic:"hashdump, load kiwi", func:"Extracts locally stored credential material (password hashes, cached secrets) for offline analysis as part of proving impact.", chips:["hashdump","load kiwi"], tradeoff:"The single most misused command category — treat as report evidence, never for account takeover outside scope."},
+];
+const timingList = document.getElementById('timingList');
+timingData.forEach((l,i) => {
+  const div = document.createElement('div');
+  div.className = 'osi-layer';
+  div.style.setProperty('--layer-color', l.color);
+  div.innerHTML = `
+    <div class="osi-head">
+      <div class="osi-num">${l.n}</div>
+      <div class="osi-name">${l.name}</div>
+      <div class="osi-mnemonic">${l.mnemonic}</div>
+      <div class="osi-chevron">▾</div>
+    </div>
+    <div class="osi-body">
+      <div class="osi-body-inner">
+        <div class="blk"><h4>What it does</h4><p>${l.func}</p></div>
+        <div class="blk">
+          <h4>Typical commands</h4>
+          <div class="chip-row">${l.chips.map(c=>`<span class="chip">${c}</span>`).join('')}</div>
+          <h4 style="margin-top:10px;">Use with care</h4>
+          <span>${l.tradeoff}</span>
+        </div>
+      </div>
+    </div>`;
+  div.querySelector('.osi-head').addEventListener('click', () => {
+    const wasOpen = div.classList.contains('open');
+    document.querySelectorAll('.osi-layer.open').forEach(o=>o.classList.remove('open'));
+    if(!wasOpen) div.classList.add('open');
+  });
+  timingList.appendChild(div);
+});
+timingList.children[0].classList.add('open');
+
+/* ============ 07 EVASION CONCEPTS ============ */
+const evasionData = [
+  {tag:"STAGED PAYLOADS", name:"Staged vs. Stageless Delivery", desc:"A staged payload sends a small initial stub first, which then pulls the full payload over the wire — smaller footprint on the exploit, but a second network callback an IDS can catch.", target:"Signature-based network IDS watching for stage-2 callbacks"},
+  {tag:"ENCODING", name:"Payload Encoding (msfvenom -e)", desc:"Rewrites the payload's byte pattern to avoid bad characters the target can't reliably handle — a reliability tool first, not a modern antivirus bypass on its own.", target:"Protocol byte restrictions, not signature-based AV"},
+  {tag:"TEMPLATES", name:"Custom Executable Templates", desc:"Wraps a payload inside a legitimate-looking host executable instead of Metasploit's well-known default templates, which AV vendors fingerprint directly.", target:"Static-signature AV matching known default templates"},
+  {tag:"PROCESS INJECTION", name:"In-Memory / Process Migration", desc:"Meterpreter can migrate its running process into another legitimate process, so nothing suspicious sits on disk for an EDR agent to scan.", target:"Disk-scanning AV that never inspects live memory"},
+  {tag:"TIMING", name:"Sleep &amp; Jitter", desc:"Delays and randomizes callback timing so beaconing traffic doesn't form the regular, easily-alerted-on pattern automated detection looks for.", target:"Behavioral/network anomaly detection on beacon intervals"},
+  {tag:"TRAFFIC SHAPE", name:"HTTPS/Domain Fronting Handlers", desc:"Wraps command-and-control traffic in ordinary-looking HTTPS so it blends into ambient encrypted web traffic on the wire.", target:"Plaintext protocol inspection, naive network monitoring"},
+  {tag:"HOST ALLOWLISTS", name:"Living-off-the-Land Awareness", desc:"Understanding which native OS tools an EDR already trusts helps you reason about detection coverage without needing custom tooling.", target:"Application allowlisting gaps in EDR policy"},
+];
+document.getElementById('evasionGrid').innerHTML = evasionData.map(a => `
+  <div class="attack-card">
+    <span class="tag">${a.tag}</span>
+    <h4>${a.name}</h4>
+    <p>${a.desc}</p>
+    <div class="target">🎯 ${a.target}</div>
+  </div>
+`).join('');
+
+/* ============ 08 ETHICS CHECKLIST ============ */
+const checks = [
+  "Get written authorization before running any exploit module outside a personal lab",
+  "Confirm exact scope — hosts, modules allowed, and dates — in a signed rules-of-engagement document",
+  "Use check before exploit wherever a module supports it, to confirm a target is actually vulnerable first",
+  "Keep every engagement in its own workspace so evidence never crosses projects",
+  "Treat hashdump/credential output as report evidence, not a way to actually log into accounts",
+  "Coordinate exploitation windows with the blue team / SOC to avoid false incident-response alarms",
+  "Never pivot into network segments outside the agreed scope, even if the route is technically reachable",
+  "Clean up sessions, persistence, and dropped files at the end of every engagement",
+];
+document.getElementById('checklist').innerHTML = checks.map((c,i) => `
+  <div class="check-item" data-i="${i}">
+    <div class="box">✓</div>
+    <span>${c}</span>
+  </div>
+`).join('');
+document.querySelectorAll('.check-item').forEach(item => {
+  item.addEventListener('click', () => item.classList.toggle('done'));
+});
+
+/* ============ 09 CHEAT GRID ============ */
+const cheatCommands = [
+  {cmd:"msfconsole", desc:"Launch the framework console"},
+  {cmd:"search cve:2024 type:exploit", desc:"Search modules by CVE year and type"},
+  {cmd:"use exploit/multi/handler", desc:"Load a generic listener for a payload"},
+  {cmd:"show options", desc:"List a loaded module's configurable options"},
+  {cmd:"set RHOSTS 10.10.10.5", desc:"Set the target host"},
+  {cmd:"set LHOST 10.10.14.2", desc:"Set your listener/callback address"},
+  {cmd:"set payload windows/meterpreter/reverse_tcp", desc:"Attach a Meterpreter payload"},
+  {cmd:"check", desc:"Test vulnerability without exploiting"},
+  {cmd:"exploit -j", desc:"Run the module as a background job"},
+  {cmd:"sessions -l", desc:"List all active sessions"},
+  {cmd:"sessions -i 1", desc:"Interact with session #1"},
+  {cmd:"sysinfo", desc:"Show target OS/architecture in Meterpreter"},
+  {cmd:"getuid", desc:"Show the current session's user context"},
+  {cmd:"background", desc:"Detach without closing the session"},
+  {cmd:"db_nmap -sV 10.10.10.0/24", desc:"Scan and auto-import into the database"},
+  {cmd:"workspace -a client1", desc:"Create an isolated engagement workspace"},
+];
+document.getElementById('cheatGrid').innerHTML = cheatCommands.map(c => `
+  <div class="cheat-tile"><div class="p">${c.cmd}</div><div class="s">${c.desc}</div></div>
+`).join('');
+</script>
+</body>
+</html>
