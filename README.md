@@ -2,12 +2,7 @@
 
 Single-file, no-build HTML reference guides for common security tools. Each page is a self-contained interactive manual — searchable command tables, expandable sections, and a printable cheat sheet — designed to be read in-browser or hosted straight off GitHub Pages.
 
-**Live reference series:**
 
-| Part | Tool | File |
-|------|------|------|
-| 01 | Nmap — network discovery & recon | [`nmap/index.html`](./nmap/index.html) |
-| 02 | Metasploit — exploitation framework | [`metasploit/index.html`](./metasploit/index.html) |
 
 
 ## What's inside each manual
